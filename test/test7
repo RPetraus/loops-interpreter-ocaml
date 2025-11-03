@@ -1,0 +1,15 @@
+//Output:
+//1 2 3
+x = 4;
+y = 8;
+if (x + y <= x * y) then {
+    a = 1;b = 2;
+    c = 3;
+} else {
+    a = 11;
+    b = 12;
+    c = 13;
+}
+print_space a;
+print_space b;
+print_endline c;

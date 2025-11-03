@@ -1,0 +1,9 @@
+//Output:
+//1
+x = 4;
+y = 8;
+if (x + y <= x * y) then
+    a = 1;
+else
+    a = 11;
+print_endline a;

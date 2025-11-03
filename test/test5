@@ -1,0 +1,13 @@
+//Output:
+//529
+//false 2
+x = 1;
+    {
+    x = 23;
+    y = 23 * x;
+    print_endline y;
+    z = (y == 230);
+    print_space z;
+    }
+x = x + 1;
+return x;

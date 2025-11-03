@@ -1,0 +1,11 @@
+//Output:
+//2
+x = 1;
+    {
+    x = 23;
+    y = 23 * x;
+    z = (y == 230);
+    //return z;
+    }
+x = x + 1;
+return x;
