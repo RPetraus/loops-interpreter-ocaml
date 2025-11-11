@@ -1,30 +1,15 @@
-open Ast
-open Eval
-
-let rec get_lines ic acc =
-  try
-    let line = input_line ic in
-    get_lines ic (line :: acc)
-  with End_of_file -> List.rev acc
-
-let parse (s : string) : prog =
+let parse (s : string) : Ast.prog =
   let lexbuf = Lexing.from_string s in
-  let ast = Parser.prog Lexer.read lexbuf in
-  ast
+  Parser.prog Lexer.read lexbuf
 
 let () =
-  let prog_string = 
+  let input =
     if Array.length Sys.argv > 1 then
       let fname = Sys.argv.(1) in
-      let ic = open_in fname in
-      let lines = get_lines ic [] in
-      close_in ic;
-      String.concat "" lines 
-    else
-      let () = print_endline "Enter a Loops expression:" in
+      In_channel.with_open_text fname In_channel.input_all 
+    else let () = print_endline "Enter a Loops expression:" in
       read_line ()
   in
-  if prog_string <> "" then
-    let prog = parse prog_string in
-    let result = eval prog in 
-    print_endline ("Evaluated expression: " ^ result)
+  let prog = parse input in
+  let result = Eval.eval prog in
+  print_endline ("Evaluated expression: " ^ result)
