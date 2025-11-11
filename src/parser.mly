@@ -17,6 +17,7 @@
 %token LPAREN RPAREN
 %token LBRACKET RBRACKET
 %token RETURN
+%token PRT PRT_EL PRT_SP
 %token SEMI
 %token EOF
 
@@ -43,7 +44,10 @@ stmts:
 stmt:
     | RETURN; e = expr; SEMI { Return e}
     | x = ID; ASSIGN; e = expr; SEMI { Assign (x, e) }
-    | LBRACKET; ss = stmts; RBRACKET { Block ss }
+    | LBRACKET; ss = stmts; RBRACKET { Blk ss }
+    | PRT; e = expr; SEMI { Prt e }
+    | PRT_EL; e = expr; SEMI { Prt_el e }
+    | PRT_SP; e = expr; SEMI { Prt_sp e }
     ;
 expr:
     | i = INT { Int i }

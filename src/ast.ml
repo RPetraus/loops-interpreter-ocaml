@@ -24,7 +24,10 @@ type expr =
 type stmt =
   | Return of expr
   | Assign of string * expr
-  | Block of stmt list
+  | Blk of stmt list
+  | Prt of expr
+  | Prt_el of expr
+  | Prt_sp of expr
 
 (** Program for Part 1 *)
 type prog = stmt list

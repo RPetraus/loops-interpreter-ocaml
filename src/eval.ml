@@ -23,7 +23,7 @@ let rec add (x : string) (v : value) (e : env) : env =
   | [] -> [(x, v)]
   | (s, vl) :: t -> if s = x then (s, v) :: t else (s, vl) :: add x v t
 
-(** [eval_expr env e] evaluates [e] to a value *)
+(** [eval_expr env e] evaluates [e] to a value using [env] *)
 let rec eval_expr (env : env) (e : expr) : value = 
   match e with
   | Int i -> VInt i
@@ -37,14 +37,14 @@ and eval_var (env : env) (x : string) : value =
   | Some v -> v
   | None -> raise (EvalError "Unbound variable")
 
-(** [eval_uop env u e] evaluates unary operator u applied to e *)
+(** [eval_uop env u e] evaluates [u] applied to [e] using [env] *)
 and eval_uop (env : env) (u : uop) (e : expr) : value =
   match (u, eval_expr env e) with
   | Neg, VInt i -> VInt (-i)
   | Not, VBool b -> VBool (not b)
   | _ -> raise (EvalError "Operator and operand type mismatch")
 
-(** [eval_bop env b e1 e2] evaluates binary operator b applied to e1 and e2 *)
+(** [eval_bop env b e1 e2] evaluates [b] applied to [e1] and [e2] using [env] *)
 and eval_bop (env : env) (b : bop) (e1: expr) (e2 : expr) : value =
   match (b, eval_expr env e1, eval_expr env e2) with
   | And, VBool b1, VBool b2 -> VBool (b1 && b2)
@@ -55,8 +55,8 @@ and eval_bop (env : env) (b : bop) (e1: expr) (e2 : expr) : value =
   | Mult, VInt i1, VInt i2 -> VInt (i1 * i2)
   | _ -> raise (EvalError "Operator and operand type mismatch")
 
-(** [eval_block env ss] evaluates a block in a fresh environment *)
-and eval_block (env : env) (ss : stmt list) : env * value option =
+(** [eval_blk env ss] evaluates [ss] in an isolated [env] *)
+and eval_blk (env : env) (ss : stmt list) : env * value option =
   let rec aux (lcl_env : env) (ss : stmt list) : env * value option =
     match ss with
     | [] -> (env, None)
@@ -66,16 +66,31 @@ and eval_block (env : env) (ss : stmt list) : env * value option =
                 | None -> aux env' t
   in aux env ss
 
-(** [eval_stmt env s] evaluates statement s in environment env *)
+(** [eval_stmt env s] evaluates [s] in [env] *)
 and eval_stmt (env : env) (s : stmt) : env * value option =
   match s with
   | Return e -> let v = eval_expr env e in 
                 (env, Some v)
   | Assign (x, e) -> let v = eval_expr env e in
                       (add x v env, None)
-  | Block ss -> eval_block env ss
+  | Blk ss -> eval_blk env ss
+  | Prt e -> let v = eval_expr env e in
+              print_value v;
+              (env, None)
+  | Prt_el e -> let v = eval_expr env e in
+                print_value v; print_newline ();
+                (env, None)
+  | Prt_sp e -> let v = eval_expr env e in
+                print_value v; print_string " ";
+                (env, None)
 
-(** [eval_prog env p] evaluates program p to a value *)
+(** [print_value v] prints [v] onto the screen *)
+and print_value (v : value) =
+  match v with
+  | VInt i -> print_int i
+  | VBool b -> print_string (string_of_bool b)
+
+(** [eval_prog env p] evaluates [p] to a value using [env] *)
 and eval_prog (env : env) (p : prog) : value =
   match p with
   | [] -> raise (EvalError "Program is empty")
@@ -85,7 +100,7 @@ and eval_prog (env : env) (p : prog) : value =
       | Some v -> v
       | None -> eval_prog env' t
 
-(** [eval p] evaluates program p and returns a string result *)
+(** [eval p] evaluates [p] into a string result *)
 let eval (p : prog) : string =
   match eval_prog [] p with
   | VInt i -> string_of_int i

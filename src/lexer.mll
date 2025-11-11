@@ -27,6 +27,9 @@ rule read =
     | "{" { LBRACKET }
     | "}" { RBRACKET }
     | "return" { RETURN }
+    | "print_endline" { PRT_EL }
+    | "print_space" { PRT_SP }
+    | "print" { PRT }
     | ";" { SEMI }
     | id { ID (Lexing.lexeme lexbuf) }
     | int { INT (int_of_string (Lexing.lexeme lexbuf)) }
