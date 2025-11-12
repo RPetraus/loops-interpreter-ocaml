@@ -22,6 +22,11 @@ rule read =
     | "and" { AND }
     | "true" { TRUE }
     | "false" { FALSE }
+    | "if" { IF }
+    | "then" { THEN }
+    | "else" { ELSE }
+    | "while" { WHILE }
+    | "do" { DO }
     | "(" { LPAREN }
     | ")" { RPAREN }
     | "{" { LBRACKET }

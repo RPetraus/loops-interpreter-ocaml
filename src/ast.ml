@@ -1,9 +1,9 @@
-(** Unary operators for Part 1 *)
+(** Unary operators *)
 type uop =
   | Neg
   | Not
 
-(** Binary operators for Part 1 *)
+(** Binary operators *)
 type bop =
   | Add
   | Sub
@@ -12,7 +12,7 @@ type bop =
   | Leq
   | And
 
-(** Expressions for Part 1 *)
+(** Expressions *)
 type expr =
   | Int of int
   | Bool of bool
@@ -20,7 +20,7 @@ type expr =
   | Unop of uop * expr
   | Binop of bop * expr * expr
 
-(** Statement for Part 1 *)
+(** Statements *)
 type stmt =
   | Return of expr
   | Assign of string * expr
@@ -28,6 +28,8 @@ type stmt =
   | Prt of expr
   | Prt_el of expr
   | Prt_sp of expr
+  | Ite of expr * stmt * stmt
+  | While of expr * stmt
 
-(** Program for Part 1 *)
+(** Program *)
 type prog = stmt list

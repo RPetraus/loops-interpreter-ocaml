@@ -32,6 +32,7 @@ let rec eval_expr (env : env) (e : expr) : value =
   | Unop (uop, e) -> eval_uop env uop e
   | Binop (bop, e1, e2) -> eval_bop env bop e1 e2
 
+(** [eval_var env x] evaluates [v] to a string using [env] *)
 and eval_var (env : env) (x : string) : value =
   match find x env with
   | Some v -> v
@@ -55,25 +56,47 @@ and eval_bop (env : env) (b : bop) (e1: expr) (e2 : expr) : value =
   | Mult, VInt i1, VInt i2 -> VInt (i1 * i2)
   | _ -> raise (EvalError "Operator and operand type mismatch")
 
-(** [eval_blk env ss] evaluates [ss] in an isolated [env] *)
-and eval_blk (env : env) (ss : stmt list) : env * value option =
+(** [eval_blk env ss is_global] evaluates [ss] in an isolated [env] where [is_global] determines the scope *)
+and eval_blk (env : env) (ss : stmt list) (is_global : bool): env * value option =
   let rec aux (lcl_env : env) (ss : stmt list) : env * value option =
     match ss with
-    | [] -> (env, None)
-    | s :: t -> let env', res = eval_stmt lcl_env s in
+    | [] -> (lcl_env, None)
+    | s :: t -> let env', res = eval_stmt lcl_env s false in
                 match res with
                 | Some v -> (env', Some v)
                 | None -> aux env' t
-  in aux env ss
+  in
+  let updated_env, res = aux env ss in
+  if is_global then (updated_env, res)
+  else (env, res)
 
-(** [eval_stmt env s] evaluates [s] in [env] *)
-and eval_stmt (env : env) (s : stmt) : env * value option =
+(** [eval_ite env c s1 s2] using [env] to evaluate [s1] if [c] is true and [s2] if [c] is false *)
+and eval_ite (env : env) (c : expr) (s1 : stmt) (s2 : stmt) : env * value option =
+  match (eval_expr env c) with
+  | VBool true -> eval_stmt env s1 true
+  | VBool false -> eval_stmt env s2 true
+  | _ -> raise (EvalError "Expecting the condition of an ite to be of type Bool")
+
+(** [eval_while env c s] evaluates [s] while [c] is true using [env] using a global scope *)
+and eval_while (env : env) (c : expr) (s : stmt) : env * value option =
+  let rec loop (env : env) : env * value option =
+    match (eval_expr env c) with
+    | VBool true -> let env', res = eval_stmt env s true in
+                    (match res with
+                    | Some v -> (env', Some v)
+                    | None -> loop env')
+    | VBool false -> (env, None)
+    | _ -> raise (EvalError "Expecting the condition of a while to be of type Bool")
+  in loop env
+
+(** [eval_stmt env s is_blk_global] evaluates [s] in [env] where [is_blk_global] sets the scope of blocks *)
+and eval_stmt (env : env) (s : stmt) (is_blk_global : bool) : env * value option =
   match s with
   | Return e -> let v = eval_expr env e in 
                 (env, Some v)
   | Assign (x, e) -> let v = eval_expr env e in
                       (add x v env, None)
-  | Blk ss -> eval_blk env ss
+  | Blk ss -> eval_blk env ss is_blk_global
   | Prt e -> let v = eval_expr env e in
               print_value v;
               (env, None)
@@ -83,6 +106,8 @@ and eval_stmt (env : env) (s : stmt) : env * value option =
   | Prt_sp e -> let v = eval_expr env e in
                 print_value v; print_string " ";
                 (env, None)
+  | Ite (c, s1, s2) -> eval_ite env c s1 s2
+  | While (c, s) -> eval_while env c s
 
 (** [print_value v] prints [v] onto the screen *)
 and print_value (v : value) =
@@ -91,17 +116,18 @@ and print_value (v : value) =
   | VBool b -> print_string (string_of_bool b)
 
 (** [eval_prog env p] evaluates [p] to a value using [env] *)
-and eval_prog (env : env) (p : prog) : value =
+and eval_prog (env : env) (p : prog) : value option =
   match p with
-  | [] -> raise (EvalError "Program is empty")
+  | [] -> None
   | s :: t -> 
-      let env', res = eval_stmt env s in
+      let env', res = eval_stmt env s false in
       match res with
-      | Some v -> v
+      | Some v -> Some v
       | None -> eval_prog env' t
 
-(** [eval p] evaluates [p] into a string result *)
+(** [eval p] evaluates [p] to a string result *)
 let eval (p : prog) : string =
   match eval_prog [] p with
-  | VInt i -> string_of_int i
-  | VBool b -> string_of_bool b
+  | Some (VInt i) -> string_of_int i
+  | Some (VBool b) -> string_of_bool b
+  | None -> ""

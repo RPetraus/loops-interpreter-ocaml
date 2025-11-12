@@ -14,6 +14,8 @@
 %token EQ
 %token LEQ
 %token PLUS MINUS TIMES
+%token IF THEN ELSE
+%token WHILE DO
 %token LPAREN RPAREN
 %token LBRACKET RBRACKET
 %token RETURN
@@ -48,6 +50,8 @@ stmt:
     | PRT; e = expr; SEMI { Prt e }
     | PRT_EL; e = expr; SEMI { Prt_el e }
     | PRT_SP; e = expr; SEMI { Prt_sp e }
+    | IF; c = expr; THEN; s1 = stmt; ELSE; s2 = stmt { Ite (c, s1, s2) }
+    | WHILE; c = expr; DO; s = stmt { While (c, s) }
     ;
 expr:
     | i = INT { Int i }

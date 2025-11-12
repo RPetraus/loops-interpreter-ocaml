@@ -12,4 +12,4 @@ let () =
   in
   let prog = parse input in
   let result = Eval.eval prog in
-  print_endline ("Evaluated expression: " ^ result)
+  print_endline (result)
