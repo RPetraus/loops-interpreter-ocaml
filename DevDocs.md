@@ -1,7 +1,3 @@
-
-## `DevDocs.md`
-
-```markdown
 # Developer Documentation
 
 ## Implementation Status
